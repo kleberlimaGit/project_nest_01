@@ -1,6 +1,6 @@
 import { Body, Controller, Post, BadRequestException } from '@nestjs/common'
 import { hash as _hash } from 'bcryptjs'
-import { UserAccountDTO } from 'src/dtos/UserAccountDTO'
+import { UserAccountDTO } from 'src/user/dtos/UserAccountDTO'
 import { PrismaService } from 'src/prisma/prisma.service'
 
 @Controller('users')
@@ -16,15 +16,17 @@ export class UserController {
     })
 
     if (findUserByEmail) {
-      throw new BadRequestException('Email not allowed')
+      throw new BadRequestException('E-mail já utilizado.')
     }
     const hash = await _hash(body.password, 8)
-    await this.prismaService.user.create({
+    const user = await this.prismaService.user.create({
       data: {
         name: body.name,
         email: body.email,
         password: hash,
       },
     })
+
+    return UserAccountDTO.convert(user)
   }
 }
