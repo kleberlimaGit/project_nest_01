@@ -1,13 +1,13 @@
 import { Body, Controller, Post, BadRequestException } from '@nestjs/common'
 import { hash as _hash } from 'bcryptjs'
-import { UserAccountDTO } from 'src/user/dtos/UserAccountDTO'
+import { UserAccountDTO } from 'src/dtos/UserAccountDTO'
 import { PrismaService } from 'src/prisma/prisma.service'
 
-@Controller('users')
-export class UserController {
+@Controller('auth')
+export class AuthController {
   constructor(private prismaService: PrismaService) {}
 
-  @Post('/accounts')
+  @Post('/create')
   async createAccount(@Body() body: UserAccountDTO) {
     const findUserByEmail = await this.prismaService.user.findFirst({
       where: {
@@ -29,4 +29,7 @@ export class UserController {
 
     return UserAccountDTO.convert(user)
   }
+
+  @Post('/login')
+  login() {}
 }
