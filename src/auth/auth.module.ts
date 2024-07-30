@@ -8,7 +8,12 @@ import { PrismaService } from 'src/prisma/prisma.service'
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET,
+      privateKey: Buffer.from(process.env.JWT_PRIVATE_KEY!, 'base64'),
+      publicKey: Buffer.from(process.env.JWT_PUBLIC_KEY!, 'base64'),
+      signOptions: {
+        algorithm: 'RS256',
+        expiresIn: '1H',
+      },
     }),
   ],
   controllers: [AuthController],

@@ -1,11 +1,22 @@
-import { Body, Controller, Post, BadRequestException } from '@nestjs/common'
-import { hash as _hash } from 'bcryptjs'
+import {
+  Body,
+  Controller,
+  Post,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import { hash as _hash, compare } from 'bcryptjs'
+import { AuthDTO } from 'src/dtos/AuthDTO'
 import { UserAccountDTO } from 'src/dtos/UserAccountDTO'
 import { PrismaService } from 'src/prisma/prisma.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   @Post('/create')
   async createAccount(@Body() body: UserAccountDTO) {
@@ -30,6 +41,28 @@ export class AuthController {
     return UserAccountDTO.convert(user)
   }
 
-  @Post('/login')
-  login() {}
+  @Post('/session')
+  async getSession(@Body() auth: AuthDTO) {
+    const { email, password } = auth
+
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email,
+      },
+    })
+
+    if (!user) {
+      throw new UnauthorizedException('Usuário não identificado.')
+    }
+
+    const isPassordValid = await compare(password, user.password)
+
+    if (!isPassordValid) {
+      throw new UnauthorizedException('Usuário não identificado.')
+    }
+    const accessToken = this.jwtService.sign({
+      sub: user.id,
+    })
+    return { access_token: accessToken }
+  }
 }
