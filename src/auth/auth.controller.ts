@@ -1,14 +1,7 @@
-import {
-  Body,
-  Controller,
-  Post,
-  BadRequestException,
-  UnauthorizedException,
-} from '@nestjs/common'
+import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { hash as _hash, compare } from 'bcryptjs'
+import { compare } from 'bcryptjs'
 import { AuthDTO } from 'src/dtos/AuthDTO'
-import { UserAccountDTO } from 'src/dtos/UserAccountDTO'
 import { PrismaService } from 'src/prisma/prisma.service'
 
 @Controller('auth')
@@ -17,29 +10,6 @@ export class AuthController {
     private prismaService: PrismaService,
     private jwtService: JwtService,
   ) {}
-
-  @Post('/create')
-  async createAccount(@Body() body: UserAccountDTO) {
-    const findUserByEmail = await this.prismaService.user.findFirst({
-      where: {
-        email: body.email,
-      },
-    })
-
-    if (findUserByEmail) {
-      throw new BadRequestException('E-mail já utilizado.')
-    }
-    const hash = await _hash(body.password, 8)
-    const user = await this.prismaService.user.create({
-      data: {
-        name: body.name,
-        email: body.email,
-        password: hash,
-      },
-    })
-
-    return UserAccountDTO.convert(user)
-  }
 
   @Post('/session')
   async getSession(@Body() auth: AuthDTO) {
